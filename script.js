@@ -81,6 +81,17 @@ function displayHabits() {
     habits.forEach(habit => {
         const habitElement = document.createElement('div');
         habitElement.className = `habit-item ${habit.completed ? 'completed' : ''}`;
+        habitElement.draggable = true;
+        
+        // Add drag event listeners
+        habitElement.addEventListener('dragstart', () => {
+            habitElement.classList.add('dragging');
+        });
+        
+        habitElement.addEventListener('dragend', () => {
+            habitElement.classList.remove('dragging');
+            saveNewOrder();
+        });
         
         // Create circles HTML with day numbers
         const circlesHTML = habit.circles
@@ -96,6 +107,7 @@ function displayHabits() {
             .join('');
         
         habitElement.innerHTML = `
+            <button class="delete-btn" onclick="deleteHabit(${habit.id})">×</button>
             <div>
                 <h3>${habit.text}</h3>
                 <small>Created: ${habit.date}</small>
@@ -103,20 +115,56 @@ function displayHabits() {
                     ${circlesHTML}
                 </div>
             </div>
-            <div>
-                <button class="complete-btn" onclick="toggleHabit(${habit.id})">
-                    ${habit.completed ? 'Undo' : 'Complete'}
-                </button>
-                <button class="delete-btn" onclick="deleteHabit(${habit.id})">Delete</button>
-            </div>
         `;
+        
+        // Store the habit ID on the element for reference
+        habitElement.dataset.habitId = habit.id;
         
         habitsList.appendChild(habitElement);
     });
 }
 
-// Initial display of habits
-displayHabits();
+// Add these new functions for drag and drop functionality
+function initializeDragAndDrop() {
+    const habitsList = document.getElementById('habitsList');
+    
+    habitsList.addEventListener('dragover', e => {
+        e.preventDefault();
+        const draggingItem = document.querySelector('.dragging');
+        const siblings = [...habitsList.querySelectorAll('.habit-item:not(.dragging)')];
+        
+        const nextSibling = siblings.find(sibling => {
+            const box = sibling.getBoundingClientRect();
+            const offset = e.clientY - box.top - box.height / 2;
+            return offset < 0;
+        });
+        
+        habitsList.insertBefore(draggingItem, nextSibling);
+    });
+}
+
+function saveNewOrder() {
+    const habitsList = document.getElementById('habitsList');
+    const habitElements = habitsList.querySelectorAll('.habit-item');
+    const newHabits = [];
+    
+    habitElements.forEach(element => {
+        const habitId = parseInt(element.dataset.habitId);
+        const habit = habits.find(h => h.id === habitId);
+        if (habit) {
+            newHabits.push(habit);
+        }
+    });
+    
+    habits = newHabits;
+    saveHabits();
+}
+
+// Initialize drag and drop after page load
+document.addEventListener('DOMContentLoaded', () => {
+    displayHabits();
+    initializeDragAndDrop();
+});
 
 // Remove or comment out any code that updates or displays numbers
 // If there's a function that updates numbers, either remove it or modify it

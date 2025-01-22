@@ -57,28 +57,43 @@ button:hover {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    position: relative;
+    cursor: move;
+    user-select: none;
 }
 
 .habit-item.completed {
     background-color: #e6f4ea;
 }
 
+.habit-item.dragging {
+    opacity: 0.5;
+    background-color: #f8f9fa;
+}
+
 .delete-btn {
-    background-color: #dc3545;
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    color: #666666;
+    padding: 0.2rem 0.5rem;
+    font-size: 1.6rem;
+    line-height: 1;
+    border: none;
+    cursor: pointer;
+    font-weight: normal;
 }
 
 .delete-btn:hover {
-    background-color: #c82333;
+    background: none;
+    color: #444444;
 }
 
+/* Remove the complete button styles */
 .complete-btn {
-    background-color: #28a745;
-    margin-right: 0.5rem;
-}
-
-.complete-btn:hover {
-    background-color: #218838;
+    display: none;
 }
 
 .circle-container {
