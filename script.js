@@ -127,7 +127,11 @@ function displayHabits() {
 // Add these new functions for drag and drop functionality
 function initializeDragAndDrop() {
     const habitsList = document.getElementById('habitsList');
-    
+    let draggedItem = null;
+    let initialY;
+    let currentY;
+
+    // Mouse events (existing code)
     habitsList.addEventListener('dragover', e => {
         e.preventDefault();
         const draggingItem = document.querySelector('.dragging');
@@ -141,6 +145,68 @@ function initializeDragAndDrop() {
         
         habitsList.insertBefore(draggingItem, nextSibling);
     });
+
+    // Touch events
+    document.addEventListener('touchstart', function(e) {
+        if (e.target.closest('.habit-item')) {
+            draggedItem = e.target.closest('.habit-item');
+            draggedItem.classList.add('dragging');
+            initialY = e.touches[0].clientY;
+            
+            // Store the initial position
+            const rect = draggedItem.getBoundingClientRect();
+            draggedItem.style.position = 'fixed';
+            draggedItem.style.width = rect.width + 'px';
+            draggedItem.style.top = rect.top + 'px';
+            draggedItem.style.left = rect.left + 'px';
+            draggedItem.style.zIndex = 1000;
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchmove', function(e) {
+        if (draggedItem) {
+            e.preventDefault();
+            currentY = e.touches[0].clientY;
+            const deltaY = currentY - initialY;
+            
+            // Move the dragged item
+            draggedItem.style.transform = `translateY(${deltaY}px)`;
+            
+            // Find position to insert
+            const siblings = [...habitsList.querySelectorAll('.habit-item:not(.dragging)')];
+            const nextSibling = siblings.find(sibling => {
+                const box = sibling.getBoundingClientRect();
+                return currentY < box.top + box.height / 2;
+            });
+            
+            if (nextSibling && nextSibling !== draggedItem.nextElementSibling) {
+                habitsList.insertBefore(draggedItem, nextSibling);
+            }
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchend', function() {
+        if (draggedItem) {
+            draggedItem.classList.remove('dragging');
+            draggedItem.style.position = '';
+            draggedItem.style.width = '';
+            draggedItem.style.top = '';
+            draggedItem.style.left = '';
+            draggedItem.style.transform = '';
+            draggedItem.style.zIndex = '';
+            
+            saveNewOrder();
+            draggedItem = null;
+        }
+    });
+
+    // Prevent click events during drag
+    habitsList.addEventListener('click', function(e) {
+        if (draggedItem) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true);
 }
 
 function saveNewOrder() {
